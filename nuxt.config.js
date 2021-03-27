@@ -16,6 +16,9 @@ export default {
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
   },
   serverMiddleware: [{ path: '/api', handler: '~/api/index.js' }],
+  server: {
+    port: 3002,
+  },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [],
 
