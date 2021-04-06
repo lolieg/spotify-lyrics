@@ -16,7 +16,13 @@ app.get('/getSong', (req, res) => {
       `https://api.textyl.co/api/lyrics?q=${req.query.songName} ${req.query.artistName}`,
       { timeout: 3000 }
     )
-    .then((r) => res.json({ lrc: r.data }))
+    .then((r) => {
+      if (r.status === 200) {
+        res.json({ lrc: r.data })
+      } else {
+        res.json({ lrc: null })
+      }
+    })
     .catch((r) => res.json({ lrc: null }))
 })
 module.exports = app

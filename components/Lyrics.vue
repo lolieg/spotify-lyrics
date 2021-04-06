@@ -2,8 +2,10 @@
   <b-loading v-if="!fetched" active></b-loading>
   <div v-else class="lyrics content has-text-centered">
     <div v-for="line in lyrics" :key="lyrics.indexOf(line)">
-      <h3 v-if="!line.lit && line.visible">{{ line.lyrics }}</h3>
-      <h3 v-else-if="line.visible" style="color: green">{{ line.lyrics }}</h3>
+      <h1 v-if="!line.lit && line.visible" style="color: green">
+        {{ line.lyrics }}
+      </h1>
+      <h1 v-else-if="line.visible">{{ line.lyrics }}</h1>
     </div>
   </div>
 </template>
@@ -36,21 +38,43 @@ export default {
       }
       const lyrics = [...this.lines]
       lyrics.map((line, index, array) => {
-        let next = index + 3
-        if (next + 1 > array.length) {
-          next -= 1
+        let next = array[index + 5]
+        if (next === undefined) {
+          next = { seconds: 999 }
         }
         if (
-          line.seconds < this.progress / 1000 &&
-          array[next].seconds > this.progress / 1000
+          this.progress / 1000 >= line.seconds - 4 &&
+          this.progress / 1000 < next.seconds - 4
         ) {
-          // line.lit = true
           line.visible = true
+          if (
+            this.progress / 1000 >= line.seconds + 4 &&
+            this.progress / 1000 < next.seconds + 4
+          ) {
+            line.lit = true
+          }
         } else {
-          line.lit = false
           line.visible = false
         }
+
         return line
+        // let next = index + 3
+        // if (next + 1 > array.length) {
+        //   next -= 1
+        // }
+        // if (
+        //   line &&
+        //   array[next] &&
+        //   line.seconds - 2 < this.progress &&
+        //   array[next].seconds - 2 > this.progress
+        // ) {
+        //   line.lit = true
+        //   line.visible = true
+        // } else {
+        //   line.lit = false
+        //   line.visible = false
+        // }
+        // return line
       })
       return lyrics
     },
@@ -75,6 +99,7 @@ export default {
           notFound: true,
           lyrics: 'No Lyrics Found',
           lit: true,
+          visible: true,
         })
       } else {
         unformattedLyrics.lrc.map((el) =>
@@ -92,5 +117,8 @@ export default {
 .lyrics {
   white-space: pre;
   max-height: 10vh;
+}
+.content {
+  font-size: 3vh;
 }
 </style>

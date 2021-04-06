@@ -1,7 +1,6 @@
 <template>
-  <div class="main-con">
+  <div>
     <nuxt></nuxt>
-    <!-- <particles-bg type="cobweb" :bg="false" /> -->
   </div>
 </template>
 
@@ -12,8 +11,18 @@ export default {
   },
 }
 </script>
-<style scoped>
-.main-con {
-  background-color: '#474747';
+<style lang="scss">
+@import '~bulma/sass/utilities/_all';
+
+$loading-background: rgb(22, 22, 20);
+$progress-bar-background-color: #bdbdbd;
+$button-background-color: #1db954;
+$button-border-color: #191414;
+
+@import '~bulma';
+@import '~buefy/src/scss/buefy';
+
+html {
+  background-color: #3698c2;
 }
 </style>
