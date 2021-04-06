@@ -5,7 +5,7 @@
       <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
     </div>
 
-    <div v-if="$auth.loggedIn">
+    <div v-if="$auth.loggedIn && $auth.user.is_playing">
       <h1 class="has-text-centered" style="font-size: 2vh">
         {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
       </h1>
@@ -22,6 +22,9 @@
         :progress="progress"
       ></Lyrics>
     </div>
+    <h1 v-else class="has-text-centered" style="font-size: 2vh">
+      Not Playing Music on Spotify
+    </h1>
   </section>
 </template>
 
