@@ -22,6 +22,13 @@
         :progress="progress"
       ></Lyrics>
     </div>
+    <h1
+      v-else-if="!$auth.loggedIn"
+      class="has-text-centered"
+      style="font-size: 2vh"
+    >
+      Not Logged In.
+    </h1>
     <h1 v-else class="has-text-centered" style="font-size: 2vh">
       Not Playing Music on Spotify
     </h1>
