@@ -2,10 +2,13 @@
   <b-loading v-if="!fetched" active></b-loading>
   <div v-else class="lyrics content has-text-centered">
     <div v-for="line in lyrics" :key="lyrics.indexOf(line)">
-      <h1 v-if="!line.lit && line.visible" style="color: green">
+      <h1
+        v-if="!line.lit && line.visible"
+        style="font-weight: bold; color: white"
+      >
         {{ line.lyrics }}
       </h1>
-      <h1 v-else-if="line.visible">{{ line.lyrics }}</h1>
+      <h1 v-else-if="line.visible" style="color: white">{{ line.lyrics }}</h1>
     </div>
   </div>
 </template>

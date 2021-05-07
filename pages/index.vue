@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section id="section">
     <div class="authBtns">
       <b-button v-if="!$auth.loggedIn" @click="login()">Login</b-button>
       <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>

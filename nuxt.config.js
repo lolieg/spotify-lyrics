@@ -4,14 +4,19 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'nuxt',
+    title: 'Spotify Lyrics',
     htmlAttrs: {
       lang: 'en',
     },
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: '' },
+      {
+        hid: 'description',
+        name: 'description',
+        content:
+          'Log in with your spotify account and get the Lyrics for your current song displayed.',
+      },
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
   },
@@ -48,13 +53,13 @@ export default {
         scheme: 'oauth2',
         endpoints: {
           authorization: 'https://accounts.spotify.com/authorize',
-          // token: process.env.CLIENT_SECRET,
+          token: 'https://accounts.spotify.com/api/token',
           userInfo: 'https://api.spotify.com/v1/me/player',
         },
         token: {
           property: 'access_token',
           type: 'Bearer',
-          maxAge: 1800,
+          maxAge: 3600,
         },
         refreshToken: {
           property: 'refresh_token',
@@ -71,7 +76,7 @@ export default {
         codeChallengeMethod: '',
         responseMode: '',
         acrValues: '',
-        // autoLogout: false
+        autoLogout: true,
       },
     },
   },
