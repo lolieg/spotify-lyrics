@@ -83,7 +83,7 @@ export default {
         accessType: undefined,
         redirectUri: undefined,
         logoutRedirectUri: undefined,
-        clientId: process.env.SPOTIFY_CLIENT_ID,
+        clientId: '7fa85f0c1dab4285a261292975b2219f',
         scope: ['user-read-playback-state'],
         state: 'UNIQUE_AND_NON_GUESSABLE',
         codeChallengeMethod: '',
