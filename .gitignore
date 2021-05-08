@@ -1,4 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
+#service worker
+sw.*
+
 ### Node template
 # Logs
 /logs

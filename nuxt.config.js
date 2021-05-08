@@ -1,3 +1,4 @@
+const dev = process.env.NODE_ENV !== 'production'
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
@@ -46,14 +47,26 @@ export default {
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
     '@nuxtjs/auth-next',
+    '@nuxtjs/pwa',
   ],
+  pwa: {
+    manifest: {
+      lang: 'en',
+      name: 'Spotify Lyrics',
+      short_name: 'Synced Lyrics',
+      display: 'standalone',
+    },
+    workbox: {
+      dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
+    },
+  },
   auth: {
     strategies: {
       spotify: {
         scheme: 'oauth2',
         endpoints: {
           authorization: 'https://accounts.spotify.com/authorize',
-          token: 'https://accounts.spotify.com/api/token',
+          // token: 'https://accounts.spotify.com/api/token',
           userInfo: 'https://api.spotify.com/v1/me/player',
         },
         token: {
@@ -76,7 +89,7 @@ export default {
         codeChallengeMethod: '',
         responseMode: '',
         acrValues: '',
-        autoLogout: true,
+        // autoLogout: true,
       },
     },
   },
