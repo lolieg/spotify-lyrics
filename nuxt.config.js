@@ -49,6 +49,7 @@ export default {
     '@nuxtjs/auth-next',
     '@nuxtjs/pwa',
   ],
+
   pwa: {
     manifest: {
       lang: 'en',
@@ -60,6 +61,7 @@ export default {
       dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
     },
   },
+
   auth: {
     strategies: {
       spotify: {
@@ -95,7 +97,9 @@ export default {
   },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {},
+  axios: {
+    baseURL: dev ? 'http://localhost:3002' : 'https://lyrics.marvinweber.me',
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
