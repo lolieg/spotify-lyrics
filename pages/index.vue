@@ -6,9 +6,16 @@
     </div>
 
     <div v-if="$auth.loggedIn && $auth.user.is_playing">
-      <h1 class="has-text-centered" style="font-size: 2vh">
-        {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
-      </h1>
+      <div class="content has-text-centered">
+        <h3>
+          {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
+        </h3>
+        <h4 v-if="genres.length > 0">
+          Artist Genres: <br />
+          {{ genres.join(', ') }}
+        </h4>
+      </div>
+
       <b-progress
         id="songProgress"
         :value="(progress / $auth.user.item.duration_ms) * 100"
@@ -41,6 +48,7 @@ export default {
     return {
       progress: 0,
       updater: null,
+      genres: [],
     }
   },
   computed: {
@@ -69,17 +77,33 @@ export default {
     }, 4000)
   },
   methods: {
-    update() {
+    async getGenre() {
+      const artistId = this.$auth.user.item.artists[0].id
+      if (!artistId) {
+        this.genres = []
+      }
+      const artist = await this.$axios.$get(
+        `https://api.spotify.com/v1/artists/${artistId}`,
+        {
+          headers: {
+            Authorization: this.$auth.strategy.token.get(),
+          },
+        }
+      )
+      this.genres = artist.genres
+    },
+    async update() {
       if (!this.$auth.loggedIn) {
         return
       }
       this.progress = this.$auth.user.progress_ms
       if (this.$auth.user.is_playing) {
+        await this.getGenre()
         clearInterval(this.updater)
-        this.updater = setInterval(async () => {
+        this.updater = setInterval(() => {
           if (this.progress >= this.$auth.user.item.duration_ms) {
             clearInterval(this.updater)
-            await this.update()
+            this.update()
             return
           }
           this.progress += 100
