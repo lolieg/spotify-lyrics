@@ -57,9 +57,9 @@ export default {
       short_name: 'Synced Lyrics',
       display: 'standalone',
     },
-    workbox: {
-      dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
-    },
+    // workbox: {
+    //   dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
+    // },
   },
 
   auth: {

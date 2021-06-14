@@ -1,49 +1,54 @@
 <template>
-  <section id="section">
-    <div class="authBtns">
-      <b-button v-if="!$auth.loggedIn" @click="login()">Login</b-button>
-      <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
-    </div>
-
-    <div v-if="$auth.loggedIn && $auth.user.is_playing">
-      <div class="content has-text-centered">
-        <h3>
-          {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
-        </h3>
-        <h4 v-if="genres.length > 0">
-          Artist Genres: <br />
-          {{ genres.join(', ') }}
-        </h4>
+  <div class="mainContainer">
+    <three></three>
+    <section id="section">
+      <div class="authBtns">
+        <b-button v-if="!$auth.loggedIn" @click="login()">Login</b-button>
+        <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
       </div>
 
-      <b-progress
-        id="songProgress"
-        :value="(progress / $auth.user.item.duration_ms) * 100"
-        show-value
-        size="is-large"
-        >{{ progressTime }}</b-progress
+      <div v-if="$auth.loggedIn && $auth.user.is_playing">
+        <div class="content has-text-centered">
+          <h3>
+            {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
+          </h3>
+          <h4 v-if="genres.length > 0">
+            Artist Genres: <br />
+            {{ genres.join(', ') }}
+          </h4>
+        </div>
+
+        <b-progress
+          id="songProgress"
+          :value="(progress / $auth.user.item.duration_ms) * 100"
+          show-value
+          size="is-large"
+          >{{ progressTime }}</b-progress
+        >
+        <Lyrics
+          :song-name="$auth.user.item.name"
+          :artist-name="$auth.user.item.artists[0].name"
+          :progress="progress"
+        ></Lyrics>
+      </div>
+      <h1
+        v-else-if="!$auth.loggedIn"
+        class="has-text-centered"
+        style="font-size: 2vh"
       >
-      <Lyrics
-        :song-name="$auth.user.item.name"
-        :artist-name="$auth.user.item.artists[0].name"
-        :progress="progress"
-      ></Lyrics>
-    </div>
-    <h1
-      v-else-if="!$auth.loggedIn"
-      class="has-text-centered"
-      style="font-size: 2vh"
-    >
-      Not Logged In.
-    </h1>
-    <h1 v-else class="has-text-centered" style="font-size: 2vh">
-      Not Playing Music on Spotify
-    </h1>
-  </section>
+        Not Logged In.
+      </h1>
+      <h1 v-else class="has-text-centered" style="font-size: 2vh">
+        Not Playing Music on Spotify
+      </h1>
+    </section>
+  </div>
 </template>
 
 <script>
+import Three from '~/components/Three.vue'
 export default {
+  components: { Three },
   data() {
     return {
       progress: 0,
@@ -123,6 +128,11 @@ export default {
 #songProgress {
   margin-left: 10vh;
   margin-right: 10vh;
+}
+#section {
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 .authBtns {
   margin-top: 2vh;
