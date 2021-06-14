@@ -75,8 +75,11 @@ export default {
       if (!this.$auth.loggedIn) {
         return
       }
-      // const old = this.$auth.user.item.name
-      await this.$auth.fetchUser()
+      try {
+        await this.$auth.fetchUser()
+      } catch (e) {
+        this.logout()
+      }
 
       this.update()
     }, 4000)
