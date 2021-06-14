@@ -3,8 +3,8 @@
 </template>
 
 <script lang="ts">
-import * as THREE from 'three'
 import Vue from 'vue'
+const THREE = require('three')
 export default Vue.extend({
   data() {
     const camera = new THREE.PerspectiveCamera(
