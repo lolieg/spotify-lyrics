@@ -27,6 +27,7 @@
         "@nuxt/types",
         "@nuxtjs/auth-next",
         "@types/three",
+        "buefy/types",
       ]
     },
     "exclude": [

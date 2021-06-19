@@ -1,36 +1,34 @@
 <template>
-  <b-loading v-if="!fetched" active></b-loading>
-  <div v-else class="content has-text-centered">
-    <!-- <div v-for="line in lyrics" :key="lyrics.indexOf(line)">
+  <div>
+    <div v-if="!fetched" class="is-relative some-wrapper" style="height: 25vh">
+      <b-loading active :is-full-page="false"></b-loading>
+    </div>
+    <div v-else class="content has-text-centered">
       <h1
-        v-if="!line.lit && line.visible"
-        style="font-weight: bold; color: white"
+        v-if="runner != null && !noLrc && runner.curIndex() >= 1"
+        class="trans"
       >
-        {{ line.lyrics }}
+        {{ runner.getLyric(runner.curIndex() - 1).content }}
       </h1>
-      <h1 v-else-if="line.visible" style="color: white">{{ line.lyrics }}</h1>
-    </div> -->
-    <h1 v-if="runner != null && !noLrc && runner.curIndex() >= 1" class="trans">
-      {{ runner.getLyric(runner.curIndex() - 1).content }}
-    </h1>
-    <h1
-      v-if="runner != null && !noLrc && runner.curIndex() >= 0"
-      style="font-weight: bold; color: green"
-    >
-      {{ runner.curLyric().content }}
-    </h1>
-    <h1 v-else-if="noLrc" style="color: white">No Lyrics Found!</h1>
-    <h1
-      v-if="
-        runner != null &&
-        !noLrc &&
-        runner.curIndex() >= 0 &&
-        runner.curIndex() + 1 < lrc.lyrics.length
-      "
-      class="trans"
-    >
-      {{ runner.getLyric(runner.curIndex() + 1).content }}
-    </h1>
+      <h1
+        v-if="runner != null && !noLrc && runner.curIndex() >= 0"
+        style="font-weight: bold; color: green"
+      >
+        {{ runner.curLyric().content }}
+      </h1>
+      <h1 v-else-if="noLrc" style="color: white">No Lyrics Found!</h1>
+      <h1
+        v-if="
+          runner != null &&
+          !noLrc &&
+          runner.curIndex() >= 0 &&
+          runner.curIndex() + 1 < lrc.lyrics.length
+        "
+        class="trans"
+      >
+        {{ runner.getLyric(runner.curIndex() + 1).content }}
+      </h1>
+    </div>
   </div>
 </template>
 <script>
@@ -58,57 +56,62 @@ export default {
       fetched: false,
     }
   },
-  computed: {
-    lyrics() {
-      if (this.lines[0].notFound !== undefined) {
-        return this.lines
-      }
-      const lyrics = [...this.lines]
-      lyrics.map((line, index, array) => {
-        let next = array[index + 5]
-        if (next === undefined) {
-          next = { seconds: 999 }
-        }
-        if (
-          this.progress / 1000 >= line.seconds - 4 &&
-          this.progress / 1000 < next.seconds - 4
-        ) {
-          line.visible = true
-          if (
-            this.progress / 1000 >= line.seconds + 4 &&
-            this.progress / 1000 < next.seconds + 4
-          ) {
-            line.lit = true
-          }
-        } else {
-          line.visible = false
-        }
+  // computed: {
+  //   lyrics() {
+  //     if (this.lines[0].notFound !== undefined) {
+  //       return this.lines
+  //     }
+  //     const lyrics = [...this.lines]
+  //     lyrics.map((line, index, array) => {
+  //       let next = array[index + 5]
+  //       if (next === undefined) {
+  //         next = { seconds: 999 }
+  //       }
+  //       if (
+  //         this.progress / 1000 >= line.seconds - 4 &&
+  //         this.progress / 1000 < next.seconds - 4
+  //       ) {
+  //         line.visible = true
+  //         if (
+  //           this.progress / 1000 >= line.seconds + 4 &&
+  //           this.progress / 1000 < next.seconds + 4
+  //         ) {
+  //           line.lit = true
+  //         }
+  //       } else {
+  //         line.visible = false
+  //       }
 
-        return line
-        // let next = index + 3
-        // if (next + 1 > array.length) {
-        //   next -= 1
-        // }
-        // if (
-        //   line &&
-        //   array[next] &&
-        //   line.seconds - 2 < this.progress &&
-        //   array[next].seconds - 2 > this.progress
-        // ) {
-        //   line.lit = true
-        //   line.visible = true
-        // } else {
-        //   line.lit = false
-        //   line.visible = false
-        // }
-        // return line
-      })
-      return lyrics
-    },
-  },
+  //       return line
+  //       // let next = index + 3
+  //       // if (next + 1 > array.length) {
+  //       //   next -= 1
+  //       // }
+  //       // if (
+  //       //   line &&
+  //       //   array[next] &&
+  //       //   line.seconds - 2 < this.progress &&
+  //       //   array[next].seconds - 2 > this.progress
+  //       // ) {
+  //       //   line.lit = true
+  //       //   line.visible = true
+  //       // } else {
+  //       //   line.lit = false
+  //       //   line.visible = false
+  //       // }
+  //       // return line
+  //     })
+  //     return lyrics
+  //   },
+  // },
   watch: {
     async songName() {
       await this.getSong()
+      // eslint-disable-next-line no-unused-vars
+      // const n = new Notification(this.$auth.user.item.name, {
+      //   body: this.lrc.toString(),
+      //   silent: true,
+      // })
     },
     progress() {
       if (this.runner === null) {

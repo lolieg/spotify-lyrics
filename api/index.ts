@@ -1,4 +1,4 @@
-import express from "express"
+import express from 'express'
 const bodyParser = require('body-parser')
 const app = express()
 require('dotenv').config()
@@ -6,8 +6,7 @@ const musicApi = require('NeteaseCloudMusicApi')
 
 app.use(bodyParser.json())
 
-app.get('/getSong', async (req : express.Request, res : express.Response) => {
-
+app.get('/getSong', async (req: express.Request, res: express.Response) => {
   let lrc = null
   try {
     const artists = await musicApi.cloudsearch({

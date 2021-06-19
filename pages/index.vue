@@ -6,7 +6,16 @@
         <b-button v-if="!$auth.loggedIn" @click="login()">Login</b-button>
         <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
       </div>
-
+      <div class="divider">Listen Together</div>
+      <synced-player
+        ref="syncedPlayer"
+        :spotify-api="spotifyApi"
+        :socket="socket"
+        :song-id="songId"
+        :progress="progress"
+        @update="update()"
+      ></synced-player>
+      <div class="divider">Lyrics & Player</div>
       <div v-if="$auth.loggedIn && $auth.user.is_playing">
         <div class="content has-text-centered">
           <h3>
@@ -45,31 +54,60 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
+import SpotifyWebApi from 'spotify-web-api-node'
 import Three from '~/components/Three.vue'
-export default {
-  components: { Three },
+import SyncedPlayer from '~/components/SyncedPlayer.vue'
+
+export default Vue.extend({
+  components: { Three, SyncedPlayer },
   data() {
+    const spotifyApi: SpotifyWebApi = new SpotifyWebApi()
+    const socket = this.$nuxtSocket({
+      channel: '/',
+      persist: true,
+    })
+    const genres: string[] = []
+    const updater = setInterval(() => {}, 10000)
     return {
       progress: 0,
-      updater: null,
-      genres: [],
+      updater,
+      genres,
+      spotifyApi,
+      socket,
     }
   },
   computed: {
+    songId() {
+      if (this.$auth.loggedIn) {
+        // @ts-ignore
+        return this.$auth.user.item.uri
+      }
+      return ''
+    },
     progressTime() {
       const date = new Date(0)
       date.setSeconds(this.progress / 1000) // specify value for SECONDS here
       const timeString = date.toISOString().substr(14, 5)
 
       const date1 = new Date(0)
-      date1.setSeconds(this.$auth.user.item.duration_ms / 1000) // specify value for SECONDS here
+      const user: any = this.$auth.user
+      date1.setSeconds(user.item.duration_ms / 1000) // specify value for SECONDS here
       const timeString1 = date1.toISOString().substr(14, 5)
 
       return timeString + ' / ' + timeString1
     },
   },
   async mounted() {
+    if (this.$auth.loggedIn) {
+      const strategy: any = this.$auth.strategy
+      this.spotifyApi.setAccessToken(
+        strategy.token.get().replace('Bearer ', '')
+      )
+    }
+
+    // await Notification.requestPermission()
     await this.update()
     setInterval(async () => {
       if (!this.$auth.loggedIn) {
@@ -82,34 +120,34 @@ export default {
       }
 
       this.update()
-    }, 4000)
+    }, 2000)
   },
   methods: {
-    async getGenre() {
-      const artistId = this.$auth.user.item.artists[0].id
-      if (!artistId) {
-        this.genres = []
-      }
-      const artist = await this.$axios.$get(
-        `https://api.spotify.com/v1/artists/${artistId}`,
-        {
-          headers: {
-            Authorization: this.$auth.strategy.token.get(),
-          },
-        }
-      )
-      this.genres = artist.genres
+    getGenre() {
+      const user: any = this.$auth.user
+      const artistId = user.item.artists[0].id
+      this.spotifyApi
+        .getArtist(artistId)
+        .then((resp) => (this.genres = resp.body.genres))
     },
     async update() {
       if (!this.$auth.loggedIn) {
         return
       }
-      this.progress = this.$auth.user.progress_ms
-      if (this.$auth.user.is_playing) {
+      const user: any = this.$auth.user
+      const syncedPlayer: any = this.$refs.syncedPlayer
+      if (this.progress + 3000 < user.progress_ms && this.progress !== 0) {
+        await syncedPlayer.seeked(user.progress_ms)
+      }
+      if (this.progress - 3000 > user.progress_ms && this.progress !== 0) {
+        await syncedPlayer.seeked(user.progress_ms)
+      }
+      this.progress = user.progress_ms
+      if (user.is_playing) {
         await this.getGenre()
         clearInterval(this.updater)
         this.updater = setInterval(() => {
-          if (this.progress >= this.$auth.user.item.duration_ms) {
+          if (this.progress >= user.item.duration_ms) {
             clearInterval(this.updater)
             this.update()
             return
@@ -125,7 +163,7 @@ export default {
       this.$auth.logout()
     },
   },
-}
+})
 </script>
 <style lang="css" scoped>
 #songProgress {

@@ -49,7 +49,17 @@ export default {
     '@nuxtjs/axios',
     '@nuxtjs/auth-next',
     '@nuxtjs/pwa',
+    'nuxt-socket-io',
   ],
+
+  io: {
+    sockets: [
+      {
+        url: dev ? 'http://localhost:3002' : 'https://lyrics.marvinweber.me',
+        default: true,
+      },
+    ],
+  },
 
   pwa: {
     manifest: {
@@ -58,9 +68,9 @@ export default {
       short_name: 'Synced Lyrics',
       display: 'standalone',
     },
-    // workbox: {
-    //   dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
-    // },
+    workbox: {
+      // dev, // or use a global variable to track the current NODE_ENV, etc to determine dev mode
+    },
   },
 
   auth: {
@@ -87,7 +97,7 @@ export default {
         redirectUri: undefined,
         logoutRedirectUri: undefined,
         clientId: '7fa85f0c1dab4285a261292975b2219f',
-        scope: ['user-read-playback-state'],
+        scope: ['user-read-playback-state', 'user-modify-playback-state'],
         state: 'UNIQUE_AND_NON_GUESSABLE',
         codeChallengeMethod: '',
         responseMode: '',

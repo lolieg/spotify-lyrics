@@ -3,8 +3,10 @@
 </template>
 
 <script lang="ts">
+import * as THREE from 'three'
+import { DirectionalLight, Object3D, Renderer, Scene } from 'three'
 import Vue from 'vue'
-const THREE = require('three')
+// const THREE = require('three')
 export default Vue.extend({
   data() {
     const camera = new THREE.PerspectiveCamera(
@@ -13,12 +15,22 @@ export default Vue.extend({
       0.1,
       1000
     )
-    const scene = new THREE.Scene()
-    const renderer = new THREE.WebGLRenderer()
-    const light = new THREE.DirectionalLight('#bb00ff')
-    const cube = new THREE.Mesh(
+    const scene: Scene = new THREE.Scene()
+    const renderer: Renderer = new THREE.WebGLRenderer()
+    const light: DirectionalLight = new THREE.DirectionalLight('#ffffff')
+    const loader = new THREE.TextureLoader()
+    const materials = []
+    for (let i = 1; i < 7; i++) {
+      materials.push(
+        new THREE.MeshStandardMaterial({
+          map: loader.load(require(`../assets/cubeMaps/${i}.jpg`)),
+        })
+      )
+    }
+
+    const cube: Object3D = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1),
-      new THREE.MeshStandardMaterial({ color: '#db2c09', wireframe: false })
+      materials
     )
     return {
       camera,
@@ -51,12 +63,12 @@ export default Vue.extend({
       self.renderer.setSize(window.innerWidth, window.innerHeight)
     }
 
-    this.cube.position.set(0, 2, 0)
+    this.cube.position.set(0, 1, 0)
     this.scene.add(this.cube)
     this.light.target = this.cube
 
     function addStar() {
-      const geometry = new THREE.SphereGeometry(0.25, 24, 24)
+      const geometry = new THREE.SphereGeometry(0.15, 24, 24)
       const material = new THREE.MeshStandardMaterial({ color: '#FFFFFF' })
       const star = new THREE.Mesh(geometry, material)
 
@@ -76,8 +88,8 @@ export default Vue.extend({
     animate() {
       requestAnimationFrame(this.animate)
       this.renderer.render(this.scene, this.camera)
-      this.cube.rotation.x += 0.01
-      this.cube.rotation.z += 0.01
+      this.cube.rotation.x += 0.005
+      this.cube.rotation.z += 0.005
     },
   },
 })

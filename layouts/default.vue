@@ -35,6 +35,7 @@ export default {
 </script>
 <style lang="scss">
 @import '~bulma/sass/utilities/_all';
+@import '~@creativebulma/bulma-divider';
 
 $loading-background: rgba(22, 22, 20, 0);
 $progress-bar-background-color: #bdbdbd;
