@@ -6,17 +6,17 @@
     <div v-else class="content has-text-centered">
       <h1
         v-if="runner != null && !noLrc && runner.curIndex() >= 1"
-        class="trans"
+        class="transparent"
       >
         {{ runner.getLyric(runner.curIndex() - 1).content }}
       </h1>
       <h1
         v-if="runner != null && !noLrc && runner.curIndex() >= 0"
-        style="font-weight: bold; color: green"
+        class="normal"
       >
         {{ runner.curLyric().content }}
       </h1>
-      <h1 v-else-if="noLrc" style="color: white">No Lyrics Found!</h1>
+      <h1 v-else-if="noLrc">No Lyrics Found!</h1>
       <h1
         v-if="
           runner != null &&
@@ -24,7 +24,7 @@
           runner.curIndex() >= 0 &&
           runner.curIndex() + 1 < lrc.lyrics.length
         "
-        class="trans"
+        class="transparent"
       >
         {{ runner.getLyric(runner.curIndex() + 1).content }}
       </h1>
@@ -107,17 +107,11 @@ export default {
   watch: {
     async songName() {
       await this.getSong()
-      // eslint-disable-next-line no-unused-vars
-      // const n = new Notification(this.$auth.user.item.name, {
-      //   body: this.lrc.toString(),
-      //   silent: true,
-      // })
     },
     progress() {
-      if (this.runner === null) {
-        return
+      if (this.runner !== null) {
+        this.runner.timeUpdate(this.progress / 1000)
       }
-      this.runner.timeUpdate(this.progress / 1000)
     },
   },
   async mounted() {
@@ -137,40 +131,51 @@ export default {
         this.fetched = true
         return
       }
-      this.lrc = Lrc.parse(lrcText.lrc)
+      if (lrcText.lrc !== null) {
+        this.lrc = Lrc.parse(lrcText.lrc)
+      }
+
       if (this.runner !== null) {
         this.runner.setLrc(this.lrc)
         this.runner.lrcUpdate()
         this.runner.timeUpdate(this.progress / 1000)
       }
       this.fetched = true
-      // this.lines = []
-      // const unformattedLyrics = await this.$axios.$get(
-      //   `/api/getSong?songName=${this.songName}&artistName=${this.artistName}`
-      // )
-      // if (unformattedLyrics.lrc === null) {
-      //   this.lines.push({
-      //     notFound: true,
-      //     lyrics: 'No Lyrics Found',
-      //     lit: true,
-      //     visible: true,
-      //   })
-      // } else {
-      //   unformattedLyrics.lrc.map((el) =>
-      //     Object.assign(el, { lit: false, visible: false })
-      //   )
-      //   this.lines.push(...unformattedLyrics.lrc)
-      // }
     },
   },
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .content {
   font-size: 3vh;
 }
-.trans {
+.normal {
   font-weight: bold;
-  color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(45deg, #00c9ff 0%, #50f760 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
+.transparent {
+  background: linear-gradient(
+    45deg,
+    rgba(0, 201, 255, 0.2) 0%,
+    rgba(80, 247, 96, 0.2) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
+.transparent:hover {
+  background: linear-gradient(90deg, #dda3ff 0%, #63ffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
 }
 </style>

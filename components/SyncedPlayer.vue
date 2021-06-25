@@ -8,14 +8,14 @@
         </b-field>
       </div>
       <div class="column is-centered">
-        <b-field label="Listen Together">
+        <b-field label="Join Code">
           <b-input v-model="inviteCode"></b-input>
           <b-button icon-left="check" @click="joinRoom()"></b-button>
         </b-field>
       </div>
     </div>
     <div class="content has-text-centered">
-      <h2>Members:</h2>
+      <!-- <h2>Members:</h2> -->
     </div>
   </div>
 </template>

@@ -1,7 +1,8 @@
+// @ts-ignore
 const dev = process.env.NODE_ENV !== 'production'
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
-  ssr: false,
+  ssr: true,
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -23,6 +24,7 @@ export default {
   },
   serverMiddleware: [{ path: '/api', handler: '~/api/index.ts' }],
   server: {
+    // host: '192.168.0.15',
     port: 3002,
   },
   // Global CSS: https://go.nuxtjs.dev/config-css
@@ -50,6 +52,7 @@ export default {
     '@nuxtjs/auth-next',
     '@nuxtjs/pwa',
     'nuxt-socket-io',
+    'nuxt-animejs',
   ],
 
   io: {
@@ -79,19 +82,19 @@ export default {
         scheme: 'oauth2',
         endpoints: {
           authorization: 'https://accounts.spotify.com/authorize',
-          // token: 'https://accounts.spotify.com/api/token',
+          token: 'https://accounts.spotify.com/api/token',
           userInfo: 'https://api.spotify.com/v1/me/player',
         },
         token: {
           property: 'access_token',
           type: 'Bearer',
-          maxAge: 3600,
+          maxAge: 3060,
         },
         refreshToken: {
           property: 'refresh_token',
           maxAge: 60 * 60 * 24 * 30,
         },
-        responseType: 'token',
+        responseType: 'code',
         grantType: 'authorization_code',
         accessType: undefined,
         redirectUri: undefined,
@@ -99,7 +102,7 @@ export default {
         clientId: '7fa85f0c1dab4285a261292975b2219f',
         scope: ['user-read-playback-state', 'user-modify-playback-state'],
         state: 'UNIQUE_AND_NON_GUESSABLE',
-        codeChallengeMethod: '',
+        codeChallengeMethod: 'S256',
         responseMode: '',
         acrValues: '',
         // autoLogout: true,
