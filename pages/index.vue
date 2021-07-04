@@ -7,23 +7,44 @@
       id="section"
       :style="{ visibility: loaded ? 'visible' : 'hidden' }"
     >
-      <div class="authBtns">
+      <div class="divider infoTextDivider" @click="foldSection('infoText')">
         <b-tooltip
-          label="Start playing a song if you can't log in!"
+          style="text-transform: capitalize"
+          label="Click me to fold section"
           position="is-bottom"
-          ><b-button v-if="!$auth.loggedIn" @click="login()"
-            >Login</b-button
-          ></b-tooltip
+          >Info</b-tooltip
         >
-        <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
       </div>
+      <div v-if="sections.infoText" class="infoText content has-text-centered">
+        <h1>Spotify Lyrics</h1>
+        <p>
+          Log in to Display the Lyrics of the songt you are listening to. And
+          Listen Together with your friends
+        </p>
+        <div class="authBtns">
+          <b-tooltip
+            label="Start playing a song if you can't log in!"
+            position="is-bottom"
+            ><b-button v-if="!$auth.loggedIn" @click="login()"
+              >Login</b-button
+            ></b-tooltip
+          >
+          <b-button v-if="$auth.loggedIn" @click="logout()">Logout</b-button>
+        </div>
+      </div>
+
       <div
         class="divider listenTogetherDivider"
         @click="foldSection('listenTogether')"
       >
-        Listen Together
+        <b-tooltip
+          style="text-transform: capitalize"
+          label="Click me to fold section"
+          position="is-bottom"
+          >Listen Together</b-tooltip
+        >
       </div>
-      <div v-if="listenTogether" class="listenTogether">
+      <div v-if="sections.listenTogether" class="listenTogether">
         <synced-player
           ref="syncedPlayer"
           :spotify-api="spotifyApi"
@@ -38,9 +59,14 @@
         class="divider lyricsAndPlayerDivider"
         @click="foldSection('lyricsAndPlayer')"
       >
-        Lyrics & Player
+        <b-tooltip
+          style="text-transform: capitalize"
+          label="Click me to fold section"
+          position="is-bottom"
+          >Lyrics & Player</b-tooltip
+        >
       </div>
-      <div v-if="lyricsAndPlayer" class="lyricsAndPlayer">
+      <div v-if="sections.lyricsAndPlayer" class="lyricsAndPlayer">
         <div v-if="$auth.loggedIn && $auth.user.is_playing">
           <div class="content has-text-centered animateChange">
             <h3>
@@ -104,8 +130,6 @@ export default Vue.extend({
       timeline,
       progress: 0,
       songSpeed: 100,
-      listenTogether: true,
-      lyricsAndPlayer: true,
       updater,
       genres,
       spotifyApi,
@@ -133,6 +157,9 @@ export default Vue.extend({
 
       return timeString + ' / ' + timeString1
     },
+    sections() {
+      return this.$store.state
+    },
   },
   watch: {
     songName() {
@@ -145,11 +172,13 @@ export default Vue.extend({
     },
   },
   async mounted() {
-    if (this.$auth.loggedIn) {
-      const strategy = this.$auth.strategy as Oauth2Scheme
+    const strategy = this.$auth.strategy as Oauth2Scheme
+    if (strategy.token.status().valid()) {
       this.spotifyApi.setAccessToken(
-        (strategy.token.get() as string).replace('Bearer ', '')
+        (strategy.token.get() as string)?.replace('Bearer ', '')
       )
+    }
+    if (this.$auth.loggedIn) {
       if (this.$auth.user.is_playing) {
         this.getGenre()
         this.getSpeed()
@@ -159,14 +188,27 @@ export default Vue.extend({
     await this.update()
 
     setInterval(async () => {
+      // console.log(this.$auth.user)
+      // console.log(this.$auth.loggedIn)
+      if (this.spotifyApi.getAccessToken() === undefined) {
+        if (strategy.token.status().valid()) {
+          this.spotifyApi.setAccessToken(
+            (strategy.token.get() as string)?.replace('Bearer ', '')
+          )
+        } else if (strategy.token.status().expired()) {
+          await this.$auth.refreshTokens()
+        }
+      }
+      this.spotifyApi.getMyCurrentPlaybackState().then((resp) => {
+        this.$auth.setUser(resp.body)
+      })
       if (!this.$auth.loggedIn) {
         this.loaded = true
-        this.$auth.refreshTokens()
         return
       }
+
       try {
         const songBefore = this.$auth.user?.item?.id
-        await this.$auth.fetchUser()
         if (
           songBefore !== this.$auth.user?.item?.id &&
           this.$auth.user.is_playing
@@ -180,6 +222,7 @@ export default Vue.extend({
       this.loaded = true
       this.update()
     }, 2000)
+
     const duration = 350
     this.timeline = this.$anime
       .timeline({
@@ -187,9 +230,22 @@ export default Vue.extend({
         duration,
       })
       .add({
-        targets: '.authBtns',
+        targets: '.infoTextDivider',
         opacity: ['0%', '100%'],
         delay: 3000,
+      })
+      .add(
+        {
+          targets: '.infoTextDivider',
+          marginRight: ['45%', '0%'],
+          marginLeft: ['45%', '0%'],
+          duration: duration * 2,
+        },
+        `-=${duration}`
+      )
+      .add({
+        targets: '.infoText',
+        opacity: ['0%', '100%'],
       })
       .add({
         targets: '.listenTogetherDivider',
@@ -230,8 +286,9 @@ export default Vue.extend({
   },
   methods: {
     foldSection(name: string) {
-      // @ts-ignore
-      this[name] = !this[name]
+      // // @ts-ignore
+      // this[name] = !this[name]
+      this.$store.commit('toggle', name)
     },
     animateChange() {
       this.$anime({
@@ -290,7 +347,7 @@ export default Vue.extend({
       }
     },
     login() {
-      this.$auth.loginWith('spotify', { params: { Authorization: 'value' } })
+      this.$auth.loginWith('spotify')
     },
     logout() {
       this.$auth.logout()
@@ -307,12 +364,6 @@ export default Vue.extend({
   position: absolute;
   width: 100%;
   height: 100%;
-}
-.authBtns {
-  margin-top: 2vh;
-  margin-bottom: 2vh;
-  display: grid;
-  place-items: center;
 }
 .divider:hover {
   cursor: pointer;

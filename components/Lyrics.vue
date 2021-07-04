@@ -4,6 +4,21 @@
       <b-loading active :is-full-page="false"></b-loading>
     </div>
     <div v-else class="content has-text-centered">
+      <div
+        v-if="!noLrc"
+        class="container"
+        style="margin-right: 30vw; margin-left: 30vw"
+      >
+        <h6>Offset</h6>
+        <b-slider
+          v-model="offset"
+          size="is-medium"
+          :min="-3"
+          :max="3"
+          :step="0.5"
+          ticks
+        ></b-slider>
+      </div>
       <h1
         v-if="runner != null && !noLrc && runner.curIndex() >= 1"
         class="transparent"
@@ -50,10 +65,11 @@ export default {
   },
   data() {
     return {
-      lrc: null,
       noLrc: true,
+      lrc: null,
       runner: new Runner(),
       fetched: false,
+      offset: 0,
     }
   },
   // computed: {
@@ -104,18 +120,31 @@ export default {
   //     return lyrics
   //   },
   // },
+  computed: {
+    lrcText() {
+      return this.$store.state.lrcText
+    },
+  },
   watch: {
     async songName() {
+      this.$store.commit('changeLrc', null)
+      this.$store.commit('setSongName', this.songName)
+      // this.offset = 0
       await this.getSong()
     },
     progress() {
       if (this.runner !== null) {
-        this.runner.timeUpdate(this.progress / 1000)
+        this.runner.timeUpdate(this.progress / 1000 + this.offset)
       }
     },
   },
   async mounted() {
-    await this.getSong()
+    if (this.lrcText === null || this.$store.state.songName !== this.songName) {
+      return await this.getSong()
+    }
+    this.setRunner()
+    this.fetched = true
+    this.noLrc = false
   },
   methods: {
     async getSong() {
@@ -132,15 +161,20 @@ export default {
         return
       }
       if (lrcText.lrc !== null) {
-        this.lrc = Lrc.parse(lrcText.lrc)
+        this.$store.commit('changeLrc', lrcText.lrc)
+        this.$store.commit('setSongName', this.songName)
       }
 
+      this.setRunner()
+      this.fetched = true
+    },
+    setRunner() {
+      this.lrc = Lrc.parse(this.lrcText)
       if (this.runner !== null) {
         this.runner.setLrc(this.lrc)
         this.runner.lrcUpdate()
-        this.runner.timeUpdate(this.progress / 1000)
+        this.runner.timeUpdate(this.progress / 1000 + this.offset)
       }
-      this.fetched = true
     },
   },
 }

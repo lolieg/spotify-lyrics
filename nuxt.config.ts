@@ -31,7 +31,7 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [],
+  plugins: [{ src: '~/plugins/vuex-persist', ssr: false }],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -83,7 +83,7 @@ export default {
         endpoints: {
           authorization: 'https://accounts.spotify.com/authorize',
           token: 'https://accounts.spotify.com/api/token',
-          userInfo: 'https://api.spotify.com/v1/me/player',
+          // userInfo: 'https://api.spotify.com/v1/me',
         },
         token: {
           property: 'access_token',
@@ -103,7 +103,6 @@ export default {
         scope: ['user-read-playback-state', 'user-modify-playback-state'],
         state: 'UNIQUE_AND_NON_GUESSABLE',
         codeChallengeMethod: 'S256',
-        responseMode: '',
         acrValues: '',
         // autoLogout: true,
       },

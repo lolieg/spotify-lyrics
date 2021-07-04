@@ -37,14 +37,19 @@ input:hover {
   h1,
   h2,
   h3,
-  h4 {
+  h4,
+  h5,
+  h6,
+  p {
     color: #04ffff;
   }
 }
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5,
+h6 {
   color: #04ffff;
 }
 .label {
@@ -55,6 +60,6 @@ html {
   background-color: #050202;
   background: url('../assets/background.png');
   background-size: cover;
-  // background-repeat: no-repeat;
+  background-repeat: no-repeat;
 }
 </style>

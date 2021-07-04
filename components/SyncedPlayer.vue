@@ -72,7 +72,7 @@ export default Vue.extend({
       console.log('playing')
       await this.spotifyApi.play({
         uris: [data.songId],
-        position_ms: data.time + 2000, // working against delay here
+        position_ms: data.time + 500, // working against delay here
       })
     })
     this.socket.on('updatePlaybackData', async (data) => {
