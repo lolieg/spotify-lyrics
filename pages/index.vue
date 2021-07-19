@@ -1,7 +1,7 @@
 <template>
   <div class="mainContainer">
     <client-only>
-      <three :song-speed="songSpeed"></three>
+      <three v-if="!state.performanceMode" :song-speed="songSpeed"></three>
     </client-only>
     <section
       id="section"
@@ -15,12 +15,21 @@
           >Info</b-tooltip
         >
       </div>
-      <div v-if="sections.infoText" class="infoText content has-text-centered">
+      <div v-if="state.infoText" class="infoText content has-text-centered">
         <h1>Spotify Lyrics</h1>
         <p>
-          Log in to Display the Lyrics of the songt you are listening to. And
-          Listen Together with your friends
+          Log in to Display the Lyrics of the song you are listening to and
+          Listen Together with your friends.
         </p>
+        <b-button
+          style="margin-bottom: 10px"
+          @click="changePerformanceMode()"
+          >{{
+            state.performanceMode
+              ? 'Disable Performance Mode'
+              : 'Enable Performance Mode'
+          }}</b-button
+        >
         <div class="authBtns">
           <b-tooltip
             label="Start playing a song if you can't log in!"
@@ -44,33 +53,36 @@
           >Listen Together</b-tooltip
         >
       </div>
-      <div v-if="sections.listenTogether" class="listenTogether">
+      <div v-if="state.listenTogether" class="listenTogether">
         <synced-player
           ref="syncedPlayer"
           :spotify-api="spotifyApi"
           :socket="socket"
           :song-id="songId"
           :progress="progress"
-          @update="update()"
+          @update="updateProgress()"
         ></synced-player>
       </div>
 
-      <div
-        class="divider lyricsAndPlayerDivider"
-        @click="foldSection('lyricsAndPlayer')"
-      >
+      <div class="divider playerDivider" @click="foldSection('player')">
         <b-tooltip
           style="text-transform: capitalize"
           label="Click me to fold section"
           position="is-bottom"
-          >Lyrics & Player</b-tooltip
+          >Player</b-tooltip
         >
       </div>
-      <div v-if="sections.lyricsAndPlayer" class="lyricsAndPlayer">
-        <div v-if="$auth.loggedIn && $auth.user.is_playing">
+      <div v-if="state.player" class="player">
+        <div v-if="$auth.loggedIn">
           <div class="content has-text-centered animateChange">
-            <h3>
-              {{ $auth.user.item.name }} - {{ $auth.user.item.artists[0].name }}
+            <h3
+              v-if="
+                $auth.user.item.name !== null &&
+                $auth.user.item.artists[0].name !== null
+              "
+            >
+              {{ $auth.user.item.name }} -
+              {{ $auth.user.item.artists[0].name }}
             </h3>
             <h4 v-if="genres.length > 0">
               Artist Genres: <br />
@@ -86,6 +98,43 @@
             type="is-success"
             >{{ progressTime }}</b-progress
           >
+          <!-- <div class="container"> -->
+          <div class="columns is-gapless is-centered">
+            <div class="column is-1 has-text-centered">
+              <b-button :disabled="!skipPreviousButton" @click="skipPrevious()"
+                ><b-icon icon="skip-previous"></b-icon
+              ></b-button>
+            </div>
+            <div class="column is-1 has-text-centered">
+              <b-button
+                :disabled="!togglePlayingButton"
+                @click="togglePlaying()"
+                ><b-icon
+                  :icon="$auth.user.is_playing ? 'pause' : 'play'"
+                ></b-icon
+              ></b-button>
+            </div>
+            <div class="column is-1 has-text-centered">
+              <b-button :disabled="!skipNextButton" @click="skipNext()"
+                ><b-icon icon="skip-next"></b-icon
+              ></b-button>
+            </div>
+          </div>
+        </div>
+        <!-- </div> -->
+        <h1 v-else class="has-text-centered">No Player Running</h1>
+      </div>
+
+      <div class="divider lyricsDivider" @click="foldSection('lyrics')">
+        <b-tooltip
+          style="text-transform: capitalize"
+          label="Click me to fold section"
+          position="is-bottom"
+          >Lyrics</b-tooltip
+        >
+      </div>
+      <div v-if="state.lyrics" class="lyrics">
+        <div v-if="$auth.loggedIn && $auth.user.is_playing">
           <Lyrics
             :song-name="songName"
             :artist-name="$auth.user.item.artists[0].name"
@@ -108,11 +157,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
-import SpotifyApi from 'spotify-web-api-node'
 import { Oauth2Scheme } from '@nuxtjs/auth-next'
-import Three from '~/components/Three.vue'
+import SpotifyApi from 'spotify-web-api-node'
+import Vue from 'vue'
 import SyncedPlayer from '~/components/SyncedPlayer.vue'
+import Three from '~/components/Three.vue'
 
 export default Vue.extend({
   components: { Three, SyncedPlayer },
@@ -134,6 +183,9 @@ export default Vue.extend({
       genres,
       spotifyApi,
       socket,
+      skipPreviousButton: true,
+      togglePlayingButton: true,
+      skipNextButton: true,
     }
   },
   computed: {
@@ -157,7 +209,7 @@ export default Vue.extend({
 
       return timeString + ' / ' + timeString1
     },
-    sections() {
+    state() {
       return this.$store.state
     },
   },
@@ -184,10 +236,79 @@ export default Vue.extend({
         this.getSpeed()
       }
     }
-
-    await this.update()
+    this.setTimeline()
+    await this.update(strategy)
 
     setInterval(async () => {
+      await this.update(strategy)
+    }, 2000)
+  },
+  methods: {
+    foldSection(name: string) {
+      // // @ts-ignore
+      // this[name] = !this[name]
+      this.$store.commit('toggle', name)
+    },
+    setTimeline() {
+      const duration = 350
+      const sections = ['infoText', 'listenTogether', 'player', 'lyrics']
+      const timeline = this.$anime.timeline({
+        easing: 'easeInOutQuad',
+        duration,
+        autoplay: false,
+      })
+
+      for (const section of sections) {
+        timeline
+          .add({
+            targets: `.${section}Divider`,
+            opacity: ['0%', '100%'],
+            delay: 0,
+          })
+          .add(
+            {
+              targets: `.${section}Divider`,
+              marginRight: ['45%', '0%'],
+              marginLeft: ['45%', '0%'],
+              duration: duration * 2,
+            },
+            `-=${duration}`
+          )
+          .add({
+            targets: `.${section}`,
+            opacity: ['0%', '100%'],
+          })
+      }
+      this.timeline = timeline
+    },
+    animateChange() {
+      this.$anime({
+        targets: '.animateChange',
+        easing: 'easeInOutQuad',
+        opacity: ['100%', '0%'],
+        duration: 100,
+        changeComplete: () =>
+          this.$anime({
+            targets: '.animateChange',
+            easing: 'easeInOutQuad',
+            opacity: ['0%', '100%'],
+            duration: 2000,
+          }),
+      })
+    },
+    getSpeed() {
+      this.spotifyApi
+        .getAudioAnalysisForTrack(this.$auth.user?.item?.id ?? '')
+        .then((resp: any) => (this.songSpeed = resp.body.track.tempo))
+    },
+    getGenre() {
+      const artistId = (this.$auth.user?.item as SpotifyApi.TrackObjectFull)
+        .artists[0]?.id
+      this.spotifyApi
+        .getArtist(artistId)
+        .then((resp) => (this.genres = resp.body.genres))
+    },
+    async update(strategy: Oauth2Scheme) {
       // console.log(this.$auth.user)
       // console.log(this.$auth.loggedIn)
       if (this.spotifyApi.getAccessToken() === undefined) {
@@ -220,104 +341,9 @@ export default Vue.extend({
         this.logout()
       }
       this.loaded = true
-      this.update()
-    }, 2000)
-
-    const duration = 350
-    this.timeline = this.$anime
-      .timeline({
-        easing: 'easeInOutQuad',
-        duration,
-      })
-      .add({
-        targets: '.infoTextDivider',
-        opacity: ['0%', '100%'],
-        delay: 3000,
-      })
-      .add(
-        {
-          targets: '.infoTextDivider',
-          marginRight: ['45%', '0%'],
-          marginLeft: ['45%', '0%'],
-          duration: duration * 2,
-        },
-        `-=${duration}`
-      )
-      .add({
-        targets: '.infoText',
-        opacity: ['0%', '100%'],
-      })
-      .add({
-        targets: '.listenTogetherDivider',
-        opacity: ['0%', '100%'],
-      })
-      .add(
-        {
-          targets: '.listenTogetherDivider',
-          marginRight: ['45%', '0%'],
-          marginLeft: ['45%', '0%'],
-          duration: duration * 2,
-        },
-        `-=${duration}`
-      )
-      .add({
-        targets: '.listenTogether',
-        opacity: ['0%', '100%'],
-        translateY: [-30, 0],
-      })
-      .add({
-        targets: '.lyricsAndPlayerDivider',
-        opacity: ['0%', '100%'],
-      })
-      .add(
-        {
-          targets: '.lyricsAndPlayerDivider',
-          marginRight: ['45%', '0%'],
-          marginLeft: ['45%', '0%'],
-          duration: duration * 2,
-        },
-        `-=${duration}`
-      )
-      .add({
-        targets: '.lyricsAndPlayer',
-        opacity: ['0%', '100%'],
-        translateY: [-30, 0],
-      })
-  },
-  methods: {
-    foldSection(name: string) {
-      // // @ts-ignore
-      // this[name] = !this[name]
-      this.$store.commit('toggle', name)
+      await this.updateProgress()
     },
-    animateChange() {
-      this.$anime({
-        targets: '.animateChange',
-        easing: 'easeInOutQuad',
-        opacity: ['100%', '0%'],
-        duration: 100,
-        changeComplete: () =>
-          this.$anime({
-            targets: '.animateChange',
-            easing: 'easeInOutQuad',
-            opacity: ['0%', '100%'],
-            duration: 2000,
-          }),
-      })
-    },
-    getSpeed() {
-      this.spotifyApi
-        .getAudioAnalysisForTrack(this.$auth.user?.item?.id ?? '')
-        .then((resp: any) => (this.songSpeed = resp.body.track.tempo))
-    },
-    getGenre() {
-      const artistId = (this.$auth.user?.item as SpotifyApi.TrackObjectFull)
-        .artists[0]?.id
-      this.spotifyApi
-        .getArtist(artistId)
-        .then((resp) => (this.genres = resp.body.genres))
-    },
-    async update() {
+    async updateProgress() {
       if (!this.$auth.loggedIn) {
         return
       }
@@ -339,12 +365,43 @@ export default Vue.extend({
         this.updater = setInterval(() => {
           if (this.progress >= (this.$auth.user?.item?.duration_ms ?? 0)) {
             clearInterval(this.updater)
-            this.update()
+            this.updateProgress()
             return
           }
-          this.progress += 100
+          if (this.$auth.user.is_playing) {
+            this.progress += 100
+          }
         }, 100)
       }
+    },
+    async skipPrevious() {
+      this.skipPreviousButton = false
+      try {
+        await this.spotifyApi.skipToPrevious()
+      } catch (e) {}
+      setTimeout(() => (this.skipPreviousButton = true), 1000)
+    },
+    async togglePlaying() {
+      this.togglePlayingButton = false
+      try {
+        if (this.$auth.user.is_playing) {
+          await this.spotifyApi.pause()
+        } else {
+          await this.spotifyApi.play()
+        }
+      } catch (e) {}
+
+      setTimeout(() => (this.togglePlayingButton = true), 1000)
+    },
+    async skipNext() {
+      this.skipNextButton = false
+      try {
+        await this.spotifyApi.skipToNext()
+      } catch (e) {}
+      setTimeout(() => (this.skipNextButton = true), 1000)
+    },
+    changePerformanceMode() {
+      this.$store.commit('toggle', 'performanceMode')
     },
     login() {
       this.$auth.loginWith('spotify')

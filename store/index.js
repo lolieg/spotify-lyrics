@@ -1,9 +1,11 @@
 export const state = () => ({
   listenTogether: true,
-  lyricsAndPlayer: true,
+  player: true,
+  lyrics: true,
   infoText: true,
   lrcText: null,
   songName: '',
+  performanceMode: false,
 })
 
 export const mutations = {

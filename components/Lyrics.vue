@@ -9,6 +9,9 @@
         class="container"
         style="margin-right: 30vw; margin-left: 30vw"
       >
+        <b-button style="margin-bottom: 10px" @click="wrongLyrics()"
+          >Wrong Lyrics</b-button
+        >
         <h6>Offset</h6>
         <b-slider
           v-model="offset"
@@ -31,7 +34,41 @@
       >
         {{ runner.curLyric().content }}
       </h1>
-      <h1 v-else-if="noLrc">No Lyrics Found!</h1>
+      <div v-else-if="noLrc">
+        <h1>No Lyrics Found!</h1>
+        <div class="container has-text-centered">
+          <div class="columns">
+            <div class="column"></div>
+            <div class="column">
+              <b-tooltip
+                label="Find lyrics with a better search query than the title of the actual song"
+              >
+                <b-field label="Custom Search">
+                  <b-field style="margin: 10px" label="Song">
+                    <b-input
+                      v-model="customSongName"
+                      placeholder="Perfect"
+                      @keyup.native.enter="getSong(true)"
+                    ></b-input>
+                  </b-field>
+                  <b-field style="margin: 10px" label="Artist (optional)">
+                    <b-input
+                      v-model="customArtistName"
+                      placeholder="Ed Sheeran"
+                      @keyup.native.enter="getSong(true)"
+                    ></b-input>
+                  </b-field>
+                </b-field>
+              </b-tooltip>
+
+              <b-button style="margin: 10px" @click="getSong(true)"
+                >Search for Lyrics</b-button
+              >
+            </div>
+            <div class="column"></div>
+          </div>
+        </div>
+      </div>
       <h1
         v-if="
           runner != null &&
@@ -70,6 +107,8 @@ export default {
       runner: new Runner(),
       fetched: false,
       offset: 0,
+      customSongName: '',
+      customArtistName: '',
     }
   },
   // computed: {
@@ -131,6 +170,8 @@ export default {
       this.$store.commit('setSongName', this.songName)
       // this.offset = 0
       await this.getSong()
+      this.customSongName = ''
+      this.customArtistName = ''
     },
     progress() {
       if (this.runner !== null) {
@@ -147,12 +188,20 @@ export default {
     this.noLrc = false
   },
   methods: {
-    async getSong() {
+    async getSong(custom = false) {
       this.fetched = false
       this.noLrc = true
-      const lrcText = await this.$axios.$get(
-        `/api/getSong?songName=${this.songName}&artistName=${this.artistName}`
-      )
+      let lrcText = null
+      if (custom) {
+        lrcText = await this.$axios.$get(
+          `/api/getSong?songName=${this.customSongName}&artistName=${this.customArtistName}`
+        )
+      } else {
+        lrcText = await this.$axios.$get(
+          `/api/getSong?songName=${this.songName}&artistName=${this.artistName}`
+        )
+      }
+
       if (lrcText.lrc !== null) {
         this.noLrc = false
       }
@@ -175,6 +224,9 @@ export default {
         this.runner.lrcUpdate()
         this.runner.timeUpdate(this.progress / 1000 + this.offset)
       }
+    },
+    wrongLyrics() {
+      this.noLrc = true
     },
   },
 }
