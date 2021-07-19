@@ -402,6 +402,7 @@ export default Vue.extend({
     },
     changePerformanceMode() {
       this.$store.commit('toggle', 'performanceMode')
+      location.reload()
     },
     login() {
       this.$auth.loginWith('spotify')

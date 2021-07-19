@@ -9,7 +9,7 @@
         class="container"
         style="margin-right: 30vw; margin-left: 30vw"
       >
-        <b-button style="margin-bottom: 10px" @click="wrongLyrics()"
+        <b-button style="margin-bottom: 10px" @click="noLrc = true"
           >Wrong Lyrics</b-button
         >
         <h6>Offset</h6>
@@ -106,7 +106,6 @@ export default {
       lrc: null,
       runner: new Runner(),
       fetched: false,
-      offset: 0,
       customSongName: '',
       customArtistName: '',
     }
@@ -163,11 +162,17 @@ export default {
     lrcText() {
       return this.$store.state.lrcText
     },
+    offset: {
+      get() {
+        return this.$store.state.offset
+      },
+      set(value) {
+        this.$store.commit('setOffset', value)
+      },
+    },
   },
   watch: {
     async songName() {
-      this.$store.commit('changeLrc', null)
-      this.$store.commit('setSongName', this.songName)
       // this.offset = 0
       await this.getSong()
       this.customSongName = ''
@@ -175,7 +180,7 @@ export default {
     },
     progress() {
       if (this.runner !== null) {
-        this.runner.timeUpdate(this.progress / 1000 + this.offset)
+        this.runner.timeUpdate(this.progress / 1000 + 1.5 + this.offset)
       }
     },
   },
@@ -191,6 +196,8 @@ export default {
     async getSong(custom = false) {
       this.fetched = false
       this.noLrc = true
+      this.$store.commit('setSongName', this.songName)
+      this.$store.commit('changeLrc', null)
       let lrcText = null
       if (custom) {
         lrcText = await this.$axios.$get(
@@ -218,15 +225,17 @@ export default {
       this.fetched = true
     },
     setRunner() {
-      this.lrc = Lrc.parse(this.lrcText)
+      try {
+        this.lrc = Lrc.parse(this.lrcText)
+      } catch (e) {
+        this.setRunner()
+      }
+
       if (this.runner !== null) {
         this.runner.setLrc(this.lrc)
         this.runner.lrcUpdate()
         this.runner.timeUpdate(this.progress / 1000 + this.offset)
       }
-    },
-    wrongLyrics() {
-      this.noLrc = true
     },
   },
 }

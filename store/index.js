@@ -5,6 +5,7 @@ export const state = () => ({
   infoText: true,
   lrcText: null,
   songName: '',
+  offset: 0,
   performanceMode: false,
 })
 
@@ -17,5 +18,8 @@ export const mutations = {
   },
   setSongName(state, obj) {
     state.songName = obj
+  },
+  setOffset(state, obj) {
+    state.offset = obj
   },
 }

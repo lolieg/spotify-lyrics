@@ -57,9 +57,10 @@ h6 {
 }
 body,
 html {
-  background-color: #050202;
-  background: url('../assets/background.png');
+  background: url('../assets/background.png') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
   background-size: cover;
-  background-repeat: no-repeat;
 }
 </style>
