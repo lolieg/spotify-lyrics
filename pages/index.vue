@@ -95,7 +95,8 @@
             show-value
             class="animateChange"
             size="is-large"
-            type="is-success"
+            :type="disableSeek ? 'is-grey' : 'is-success'"
+            @click.native="seek"
             >{{ progressTime }}</b-progress
           >
           <!-- <div class="container"> -->
@@ -186,6 +187,7 @@ export default Vue.extend({
       skipPreviousButton: true,
       togglePlayingButton: true,
       skipNextButton: true,
+      disableSeek: false,
     }
   },
   computed: {
@@ -245,8 +247,6 @@ export default Vue.extend({
   },
   methods: {
     foldSection(name: string) {
-      // // @ts-ignore
-      // this[name] = !this[name]
       this.$store.commit('toggle', name)
     },
     setTimeline() {
@@ -393,6 +393,20 @@ export default Vue.extend({
         await this.spotifyApi.skipToNext()
       } catch (e) {}
       setTimeout(() => (this.skipNextButton = true), 1000)
+    },
+    seek(mouse: MouseEvent) {
+      if (this.disableSeek) {
+        return
+      }
+      const progress = document.querySelector('#songProgress') as Element
+      const boundings = progress.getBoundingClientRect()
+
+      const percentage = (mouse.x - boundings.x) / boundings.width
+      this.spotifyApi.seek(
+        Math.round((this.$auth.user.item?.duration_ms as number) * percentage)
+      )
+      this.disableSeek = true
+      setTimeout(() => (this.disableSeek = false), 3000)
     },
     changePerformanceMode() {
       this.$store.commit('toggle', 'performanceMode')
