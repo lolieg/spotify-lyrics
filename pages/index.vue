@@ -216,6 +216,8 @@ export default Vue.extend({
   watch: {
     songName() {
       this.animateChange()
+      this.getSpeed()
+      this.getGenre()
     },
     loaded() {
       if (this.loaded) {
@@ -230,11 +232,9 @@ export default Vue.extend({
         (strategy.token.get() as string)?.replace('Bearer ', '')
       )
     }
-    if (this.$auth.loggedIn) {
-      if (this.$auth.user.is_playing) {
-        this.getGenre()
-        this.getSpeed()
-      }
+    if (this.validateLoggedInAndPlaying()) {
+      this.getGenre()
+      this.getSpeed()
     }
     this.setTimeline()
     await this.update(strategy)
@@ -297,11 +297,18 @@ export default Vue.extend({
       })
     },
     getSpeed() {
+      if (!this.validateLoggedInAndPlaying()) {
+        return
+      }
       this.spotifyApi
         .getAudioAnalysisForTrack(this.$auth.user?.item?.id ?? '')
         .then((resp: any) => (this.songSpeed = resp.body.track.tempo))
     },
     getGenre() {
+      if (!this.validateLoggedInAndPlaying()) {
+        return
+      }
+      this.genres = []
       const artistId = (this.$auth.user?.item as SpotifyApi.TrackObjectFull)
         .artists[0]?.id
       this.spotifyApi
@@ -326,19 +333,6 @@ export default Vue.extend({
       if (!this.$auth.loggedIn) {
         this.loaded = true
         return
-      }
-
-      try {
-        const songBefore = this.$auth.user?.item?.id
-        if (
-          songBefore !== this.$auth.user?.item?.id &&
-          this.$auth.user.is_playing
-        ) {
-          this.getGenre()
-          this.getSpeed()
-        }
-      } catch (e) {
-        this.logout()
       }
       this.loaded = true
       await this.updateProgress()
@@ -403,6 +397,9 @@ export default Vue.extend({
     changePerformanceMode() {
       this.$store.commit('toggle', 'performanceMode')
       location.reload()
+    },
+    validateLoggedInAndPlaying() {
+      return this.$auth.loggedIn && this.$auth.user.is_playing
     },
     login() {
       this.$auth.loginWith('spotify')
